@@ -87,7 +87,7 @@ class PackageItem {
 
         $compDocBlock = "/**\n";
         $compDocBlock .= ' * ' . $this->name . "\n";
-        $compDocBlock .= ' * ' . $desc . "\n * \n";
+        $compDocBlock .= ' * ' . $this->desc . "\n * \n";
 
         foreach ($docBlock as $dBlockLine) {
             $prefix = (!empty($dBlockLine)) ? ' * @' : ' * ';
@@ -100,9 +100,9 @@ class PackageItem {
 
 
     function Write($ext='.tpl') {
-        global $exportDir;
+        global $packageDir;
 
-        $fPath = $exportDir . $this->stores[$this->tags['category']] . '/';
+        $fPath = $packageDir . $this->stores[$this->tags['category']] . '/';
 
         if (!file_exists($fPath)) {
             mkdir($fPath) or die('no can mkdir! ' . $fpath);
@@ -116,6 +116,15 @@ class PackageItem {
 
         return $msg;
     }
+
+// sanitize package name into folder name
+    public static function SetPackageDirName($pkgName) {
+        $dir = preg_replace('#[^a-zA-Z0-9\s\-]#',"",$pkgName);
+        $dir = trim(strtolower($dir));
+        $dir = preg_replace('#\s+#','-',$dir);
+        return $dir;
+    }
+
 }
 
 ?>

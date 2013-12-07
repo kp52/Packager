@@ -1,18 +1,38 @@
 <?php
 /***************************************************
 Prepack module logic
-v 0.3 Keith Penton, KP52, December 2013
+v 0.4 Keith Penton, KP52, December 2013
 ****************************************************/
-
-$modId = intval($_REQUEST['id']);
+$fields = $_REQUEST;
+$modId = intval($fields['id']);
 $errMsgs = array();
-
-$exportDir = $modx->config['base_path'] . 'assets/site/';
 
 if (isset($formTpl)) {
 	$html = $modx->getChunk($formTpl);
 } else {
 	$html = file_get_contents(dirname(__FILE__) . '/select.html');
+}
+
+$exportDir = (!empty($fields['exportDir'])) ? $fields['exportDir'] : $exportDir;
+$exportDir = (substr($exportDir, -1) == '/') ? $exportDir : $exportDir . '/';
+
+if (substr($exportDir, 0, 6) == 'assets') {
+$exportDir = $modx->config['base_path'] . $exportDir;
+}
+
+if (!file_exists($exportDir)) {
+die ('Invalid directory: ' . $fields['exportDir']);
+}
+
+$packageName = (!empty($fields['pkg_name'])) ? $fields['pkg_name'] : $packageName;
+$packageName = PackageItem::SetPackageDirName($packageName);
+$packageDir = $exportDir . $packageName .'/';
+
+$packageVersion = (!empty($fields['pkg_version'])) ? $fields['pkg_version'] : $packageVersion;
+$validVersion = preg_match('#^\d.*#', $packageVersion) or die('Version number must begin with a digit');
+
+if (!file_exists($packageDir)) {
+    mkdir($packageDir, 0644, true) or die('Unable to create package folder');
 }
 
 $stables = array(
@@ -62,10 +82,6 @@ foreach ($elements as $element) {
     }
 }
 
-if (!file_exists($exportDir)) {
-	mkdir($exportDir);
-}
-
 if (isset($_REQUEST['Go'])) {
 	$fields = $_REQUEST;
 
@@ -85,7 +101,7 @@ if (isset($_REQUEST['Go'])) {
 
     // process Modules
         while ($module = array_shift($process['modules'])) {
-        $item = new PackageItem('module', $module['name'], $module['description']);
+        $item = new PackageItem('module', $module['name'], $module['description'], $packageVersion);
 
         $item->tags['clpr_category'] = $cats[$module['category']];
         $item->tags['guid'] = $module['guid'];
@@ -101,7 +117,7 @@ if (isset($_REQUEST['Go'])) {
 
     // process Snippets
     while ($snippet = array_shift($process['snippets'])) {
-        $item = new PackageItem('snippet', $snippet['name'], $snippet['description']);
+        $item = new PackageItem('snippet', $snippet['name'], $snippet['description'], $packageVersion);
 
         $item->tags['clpr_category'] = $cats[$snippet['category']];
         $item->tags['properties'] = $snippet['properties'];
@@ -122,7 +138,7 @@ if (isset($_REQUEST['Go'])) {
     }
 
     while ($plugin = array_shift($process['plugins'])) {
-        $item = new PackageItem('plugin', $plugin['name'], $plugin['description']);
+        $item = new PackageItem('plugin', $plugin['name'], $plugin['description'], $packageVersion);
 
         $item->tags['clpr_category'] = $cats[$plugin['category']];
     	$item->tags['properties'] = $plugin['properties'];
@@ -145,7 +161,7 @@ if (isset($_REQUEST['Go'])) {
 
     // process Templates
     while ($template = array_shift($process['templates'])) {
-        $item = new PackageItem('template', $template['templatename'], $template['description']);
+        $item = new PackageItem('template', $template['templatename'], $template['description'], $packageVersion);
 
         $item->tags['clpr_category'] = $cats[$template['category']];
 
@@ -162,7 +178,7 @@ if (isset($_REQUEST['Go'])) {
 
     // Process Template Variables
     while ($tv = array_shift($process['tvs'])) {
-        $item = new PackageItem('tv', $tv['name'], $tv['description']);
+        $item = new PackageItem('tv', $tv['name'], $tv['description'], $packageVersion);
 
     	$item->tags['input_type'] = $tv['type'];
     	$item->tags['caption'] = $tv['caption'];
@@ -196,6 +212,8 @@ if ($showForm) {
 	$output = $html;
 	$ph = array(
         'modId' => $modId,
+        'pkg_name' => $packageName,
+        'pkg_version' => $packageVersion
 	);
 
 	if (count($errMsgs) > 0) {
