@@ -1,7 +1,9 @@
 <?php
 /***************************************************
 Prepack module logic
-v 0.4 Keith Penton, KP52, December 2013
+v 0.5 Keith Penton, KP52, December 2013
+
+adds selective creation of /files/ folder for supporting files
 ****************************************************/
 $fields = $_REQUEST;
 $modId = intval($fields['id']);
@@ -31,10 +33,6 @@ $packageDir = $exportDir . $packageName .'/';
 $packageVersion = (!empty($fields['pkg_version'])) ? $fields['pkg_version'] : $packageVersion;
 $validVersion = preg_match('#^\d.*#', $packageVersion) or die('Version number must begin with a digit');
 
-if (!file_exists($packageDir)) {
-    mkdir($packageDir, 0644, true) or die('Unable to create package folder');
-}
-
 $stables = array(
 	'cats'       => $modx->getFullTableName('categories'),
 	'chunks'     => $modx->getFullTableName('site_htmlsnippets'),
@@ -63,13 +61,18 @@ $skip = new SimpleXMLIterator($ignoreList);
 foreach ($elements as $element) {
     $all = $modx->db->select('*', $stables[$element]);
     $ignorables = $skip->xpath('category[name="' . $element . '"]/item');
+    $elPath = $modx->config['base_path'] . 'assets/' . $element .'/' ;
 
     $ignoreSet = array();
+    $ignoreFolders = array();
 
     foreach ($ignorables as $ignore) {
-        $ignoreSet[$element][] = $ignore->name;
-    }
+        $ignoreSet[$element][] = (string)$ignore->name;
 
+        if (!empty($ignore->folder)) {
+            $ignoreFolders[$element][] = $elPath . (string)$ignore->folder;
+        }
+    }
     $process[$element] = array();
     $ignored[$element] = array();
 
@@ -79,6 +82,26 @@ foreach ($elements as $element) {
         } else {
             $ignored[$element][] = $el;
         }
+    }
+
+    $filesFolders[$element] = array();
+    $filesIgnored[$element] = array();
+
+    $allFolders = glob($elPath . '*', GLOB_ONLYDIR);
+
+    while ($folder = array_shift($allFolders)) {
+        if (!in_array($folder, $ignoreFolders[$element])) {
+            $filesFolders[$element][] = $folder;
+        } else {
+            $filesIgnored[$element][] = $folder;
+        }
+    }
+
+    if (empty($filesFolders[$element])) {
+        unset($filesFolders[$element]);
+    }
+    if (empty($filesIgnored[$element])) {
+        unset($filesIgnored[$element]);
     }
 }
 
@@ -204,6 +227,22 @@ if (isset($_REQUEST['Go'])) {
         unset($item);
     }
 
+/* Copy relevant subdirectories */
+    foreach ($filesFolders as $element=>$fileSets) {
+        echo "<h3>Copying files for $element </h3>";
+
+        if (!file_exists($packageDir . '/files')) {
+            mkdir($packageDir . '/files', '0644', true);
+        }
+
+        foreach ($fileSets as $fileSet) {
+            preg_match('@.*(assets/.*)@', $fileSet, $matches);
+            $destDir = $packageDir . '/files/' . $matches[1] ;
+
+            PackageItem::rCopy($fileSet, $destDir);
+            echo "Copied $fileSet to $destDir <br />\n";
+        }
+    }
 } else {
 	$showForm = true;
 }
@@ -225,7 +264,7 @@ if ($showForm) {
 	   $output = str_replace("[+$key+]", $value, $output);
 	}
 
-	//	delete undresolved placeholders
+	//	delete unresolved placeholders
 	$output = preg_replace('#(\[\+.*?\+\])#', '', $output);
 }
 ?>
