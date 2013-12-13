@@ -16,6 +16,7 @@
  * @method Package Create DocBlock for item, incorporating all tags
  * @method Write Save the definition as a file. Returns message as string to advise of save
  */
+
 class PackageItem {
     public $name;
     public $desc;
@@ -105,7 +106,7 @@ class PackageItem {
         $fPath = $packageDir . $this->stores[$this->tags['category']] . '/';
 
         if (!file_exists($fPath)) {
-            mkdir($fPath) or die('no can mkdir! ' . $fpath);
+            mkdir($fPath, '0644', true) or die('no can mkdir! ' . $fpath);
         }
 
         $fPath .= preg_replace('#[^a-z_A-Z\-0-9\s\.]#',"", $this->name . $ext);
@@ -125,6 +126,39 @@ class PackageItem {
         return $dir;
     }
 
-}
+    /**
+     * Recursively copy files from one directory to another
+     *
+     * http://ben.lobaugh.net/blog/864/php-5-recursively-move-or-copy-files
+     *
+     * @param String $src - Source of files being moved
+     * @param String $dest - Destination of files being moved
+     */
+    public static function rCopy($src, $dest) {
 
+        // If source is not a directory stop processing
+        if(!is_dir($src)) return false;
+
+        // If the destination directory does not exist create it
+        if(!is_dir($dest)) {
+            if(!mkdir($dest, '0644', true)) {
+            // If the destination directory could not be created stop processing
+                return false;
+            }
+        }
+
+        // Open the source directory to read in files
+        $i = new DirectoryIterator($src);
+
+        foreach($i as $f) {
+
+            if($f->isFile()) {
+                copy($f->getRealPath(), "$dest/" . $f->getFilename());
+                }
+            else if(!$f->isDot() && $f->isDir()) {
+                self::rCopy($f->getRealPath(), "$dest/$f");
+            }
+        }
+    }
+}
 ?>
