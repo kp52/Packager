@@ -3,7 +3,7 @@
  * Tools for creating Clipper Package Manager filesets
  * 
  * @category    module
- * @version    0.4
+ * @version    0.5
  * @internal @clpr_category    Manager and Admin
  * @internal @guid    a0697d6405c01c513d330fad0ee79cd9
  * @internal @properties    &packageName=Package name;string; &nameFormat=Auto name format;string;%y%m%d-%H%M &packageVersion=Version ;string;0.1a &exportDir=Export to;string;assets/site/
