@@ -99,14 +99,15 @@ class PackageItem {
         $this->definition = $compDocBlock . $this->code;
     }
 
-
     function Write($ext='.tpl') {
         global $packageDir;
 
         $fPath = $packageDir . $this->stores[$this->tags['category']] . '/';
 
         if (!file_exists($fPath)) {
-            mkdir($fPath, '0644', true) or die('no can mkdir! ' . $fpath);
+            $old_umask = umask(0);
+            mkdir($fPath, 0777, true) or die('no can mkdir! ' . $fpath);
+            umask($old_umask);
         }
 
         $fPath .= preg_replace('#[^a-z_A-Z\-0-9\s\.]#',"", $this->name . $ext);
@@ -141,7 +142,7 @@ class PackageItem {
 
         // If the destination directory does not exist create it
         if(!is_dir($dest)) {
-            if(!mkdir($dest, '0644', true)) {
+            if(!mkdir($dest, 0777, true)) {
             // If the destination directory could not be created stop processing
                 return false;
             }
@@ -153,7 +154,11 @@ class PackageItem {
         foreach($i as $f) {
 
             if($f->isFile()) {
-                copy($f->getRealPath(), "$dest/" . $f->getFilename());
+                // KP: preserve modification time
+                $t = $f->getMTime();
+                $d = "$dest/" . $f->getFilename();
+                copy($f->getRealPath(), $d);
+                touch($d, $t);
                 }
             else if(!$f->isDot() && $f->isDir()) {
                 self::rCopy($f->getRealPath(), "$dest/$f");

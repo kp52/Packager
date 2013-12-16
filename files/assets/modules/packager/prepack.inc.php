@@ -231,13 +231,9 @@ if (isset($_REQUEST['Go'])) {
     foreach ($filesFolders as $element=>$fileSets) {
         echo "<h3>Copying files for $element </h3>";
 
-        if (!file_exists($packageDir . '/files')) {
-            mkdir($packageDir . '/files', '0644', true);
-        }
-
         foreach ($fileSets as $fileSet) {
             preg_match('@.*(assets/.*)@', $fileSet, $matches);
-            $destDir = $packageDir . '/files/' . $matches[1] ;
+            $destDir = $packageDir . 'files/' . $matches[1] ;
 
             PackageItem::rCopy($fileSet, $destDir);
             echo "Copied $fileSet to $destDir <br />\n";
