@@ -99,9 +99,7 @@ class PackageItem {
         $this->definition = $compDocBlock . $this->code;
     }
 
-    function Write($ext='.tpl') {
-        global $packageDir;
-
+    function Write($packageDir, $ext='.tpl') {
         $fPath = $packageDir . $this->stores[$this->tags['category']] . '/';
 
         if (!file_exists($fPath)) {

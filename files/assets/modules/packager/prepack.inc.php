@@ -117,7 +117,7 @@ if (isset($_REQUEST['Go'])) {
         $item->code = $chunk['snippet'];
 
         $item->Package();
-        echo $item->Write();
+        echo $item->Write($packageDir);
 
         unset($item);
     }
@@ -133,7 +133,7 @@ if (isset($_REQUEST['Go'])) {
         $item->code = $module['modulecode'];
 
         $item->Package();
-        echo $item->Write();
+        echo $item->Write($packageDir);
 
         unset($item);
     }
@@ -148,7 +148,7 @@ if (isset($_REQUEST['Go'])) {
         $item->code = $snippet['snippet'];
 
         $item->Package();
-        echo $item->Write();
+        echo $item->Write($packageDir);
 
         unset($item);
     }
@@ -179,7 +179,7 @@ if (isset($_REQUEST['Go'])) {
         $item->tags['events'] = implode(',', $triggers);
 
         $item->Package();
-        echo $item->Write();
+        echo $item->Write($packageDir);
     }
 
     // process Templates
@@ -191,7 +191,7 @@ if (isset($_REQUEST['Go'])) {
         $item->code = $template['content'];
 
         $item->Package();
-        echo $item->Write();
+        echo $item->Write($packageDir);
 
     // save template ID=>name pairs for TV assignments
     	$templateNames[$template['id']] = $template['templatename'];
@@ -222,7 +222,7 @@ if (isset($_REQUEST['Go'])) {
         $item->tags['template_assignments'] = implode(',', $assigned);
 
         $item->Package();
-        echo $item->Write();
+        echo $item->Write($packageDir);
 
         unset($item);
     }
