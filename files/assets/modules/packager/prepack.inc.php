@@ -77,7 +77,9 @@ foreach ($elements as $element) {
     $ignored[$element] = array();
 
     while ($el = $modx->db->getRow($all)) {
-        if (!in_array($el['name'], $ignoreSet[$element])) {
+        $elName = isset($el['templatename']) ? $el['templatename'] : $el['name'];
+
+        if (!in_array($elName, $ignoreSet[$element])) {
             $process[$element][] = $el;
         } else {
             $ignored[$element][] = $el;
