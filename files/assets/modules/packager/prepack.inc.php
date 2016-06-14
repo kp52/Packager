@@ -1,9 +1,9 @@
 <?php
 /***************************************************
 Prepack module logic
-v 0.5 Keith Penton, KP52, December 2013
+v 0.5.1 Keith Penton, KP52, June 2016
 
-adds selective creation of /files/ folder for supporting files
+adds test for empty elements in XML 'ignore' list
 ****************************************************/
 $fields = $_REQUEST;
 $modId = intval($fields['id']);
@@ -79,10 +79,10 @@ foreach ($elements as $element) {
     while ($el = $modx->db->getRow($all)) {
         $elName = isset($el['templatename']) ? $el['templatename'] : $el['name'];
 
-        if (!in_array($elName, $ignoreSet[$element])) {
-            $process[$element][] = $el;
-        } else {
+        if (!empty($ignoreSet[$element]) && in_array($elName, $ignoreSet[$element])) {
             $ignored[$element][] = $el;
+        } else {
+            $process[$element][] = $el;
         }
     }
 
@@ -92,11 +92,11 @@ foreach ($elements as $element) {
     $allFolders = glob($elPath . '*', GLOB_ONLYDIR);
 
     while ($folder = array_shift($allFolders)) {
-        if (!in_array($folder, $ignoreFolders[$element])) {
+        if (!empty($ignoreFolders[$element]) && in_array($folder, $ignoreFolders[$element])) {
+           $filesIgnored[$element][] = $folder;
+         } else {
             $filesFolders[$element][] = $folder;
-        } else {
-            $filesIgnored[$element][] = $folder;
-        }
+       }
     }
 
     if (empty($filesFolders[$element])) {
